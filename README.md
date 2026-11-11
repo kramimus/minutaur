@@ -148,3 +148,7 @@ The audio server knows which program has the mic, not which site, so this trigge
 | `cli.py` | Commands |
 
 The tests run the whole pipeline, including live capture and call detection, against fake `pactl`/`parec` programs, a scripted transcriber and a scripted model, and exercise the Bedrock and Claude API clients against a mock HTTP transport.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
