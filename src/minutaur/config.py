@@ -3,13 +3,9 @@ from __future__ import annotations
 
 import dataclasses
 import os
+import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
-
-try:
-    import tomllib
-except ModuleNotFoundError:  # Python 3.10
-    import tomli as tomllib
 
 CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config") / "minutaur"
 CONFIG_PATH = CONFIG_DIR / "config.toml"

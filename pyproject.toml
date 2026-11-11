@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=77"]
-build-backend = "setuptools.build_meta"
+requires = ["uv_build>=0.11,<0.12"]
+build-backend = "uv_build"
 
 [project]
 name = "minutaur"
@@ -9,26 +9,19 @@ description = "Takes the minutes of your Linux meetings: records, transcribes, a
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.24",
     "PyYAML>=6",
     "anthropic[bedrock]>=2.8",
     "faster-whisper>=1.0",
-    "tomli>=2; python_version < '3.11'",
 ]
-
-[project.optional-dependencies]
-dev = ["pytest>=7"]
 
 [project.scripts]
 minutaur = "minutaur.cli:main"
 
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.setuptools.package-data]
-minutaur = ["builtin_skills/*/*.md"]
+[dependency-groups]
+dev = ["pytest>=7"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

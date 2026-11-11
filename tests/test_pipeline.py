@@ -142,8 +142,11 @@ def test_live_capture(cfg, fake_audio):
     assert printed[0].startswith("[00:00:00] Others: others one")
 
     assert live_calls >= 2, "notes should have been updated while recording"
-    assert any(c["model"] == "anthropic.claude-haiku-5-5" for c in llm.calls[:live_calls])
-    assert [c["model"] for c in llm.calls[live_calls:]] == ["anthropic.claude-sonnet-5-5"] * 2
+    # A live update can still be in flight when stop() begins, so check the
+    # order of calls rather than where the count was taken.
+    models = [c["model"] for c in llm.calls]
+    assert models[-2:] == ["anthropic.claude-sonnet-5-5"] * 2     # one final pass per skill
+    assert set(models[:-2]) == {"anthropic.claude-haiku-5-5"}      # everything before is live
 
     with wave.open(str(out / "audio.wav")) as wav:  # L = mic, R = system
         assert wav.getnchannels() == 2

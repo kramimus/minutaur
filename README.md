@@ -16,10 +16,11 @@ Audio and transcription stay on your machine. Only transcript text goes to the n
 
 ## Install
 
-Ubuntu 22.04 or newer (PipeWire or PulseAudio), Python 3.10+.
+Ubuntu 22.04 or newer (PipeWire or PulseAudio) and [uv](https://docs.astral.sh/uv/). uv provides Python 3.11+ itself if your system doesn't have it.
 
 ```bash
-sudo apt install pulseaudio-utils ffmpeg libnotify-bin python3-venv
+sudo apt install pulseaudio-utils ffmpeg libnotify-bin
+curl -LsSf https://astral.sh/uv/install.sh | sh     # if you don't have uv yet
 make install             # no sudo: everything goes under your home directory
 aws sso login            # or `aws configure`: any credentials that can call Bedrock
 minutaur doctor
@@ -29,11 +30,12 @@ If your AWS profile has no region, add `AWS_REGION=us-west-2` (or yours) to `~/.
 
 | `make` target | What it does |
 |---|---|
-| `make install` | Install or upgrade: a venv in `~/.local/share/minutaur`, the `minutaur` command in `~/.local/bin`, a systemd user unit |
+| `make install` | Install or upgrade, at exactly the versions in `uv.lock`: an environment in `~/.local/share/minutaur`, the `minutaur` command in `~/.local/bin`, a systemd user unit |
 | `make enable` / `make disable` | Start / stop recording every browser call automatically, from login |
 | `make uninstall` | Remove the program; your config, skills and meetings stay |
-| `make test` | Run the tests in `.venv` (no audio hardware, model download or credentials needed). `make test ARGS="-k notes"` passes options to pytest |
-| `make clean` | Remove `.venv` and build leftovers |
+| `make test` | Run the tests with `uv run` (no audio hardware, model download or credentials needed). `make test ARGS="-k notes"` passes options to pytest |
+| `make lock` | Move `uv.lock` to the newest versions `pyproject.toml` allows; then `make test` and commit it |
+| `make clean` | Remove the dev `.venv` and build leftovers |
 
 The Whisper model (about 500 MB for `small.en`) downloads the first time you record.
 
@@ -133,6 +135,9 @@ The audio server knows which program has the mic, not which site, so this trigge
 - **Consent.** Recording a call without telling the other participants is illegal in many places, including California and other all-party-consent states. Tell people you are recording.
 
 ## Code
+
+Development uses uv: `uv run minutaur ...` runs the command from the checkout, `uv add <package>` adds a dependency and updates `uv.lock`.
+
 
 | File | Role |
 |---|---|
