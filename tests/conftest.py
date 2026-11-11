@@ -6,8 +6,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from meetscribe.audio import RATE
-from meetscribe.config import Config
+from minutaur.audio import RATE
+from minutaur.config import Config
 
 
 def burst_signal(pattern: list[tuple[float, bool]], seed: int = 0) -> np.ndarray:

@@ -5,8 +5,8 @@ import json
 
 import pytest
 
-from meetscribe import llm
-from meetscribe.config import Notes
+from minutaur import llm
+from minutaur.config import Notes
 
 httpx2 = pytest.importorskip("httpx2")  # the transport the anthropic SDK uses
 
@@ -51,8 +51,8 @@ def ask(backend, model):
 def test_bedrock_signs_with_aws_credentials(clean_env):
     clean_env.setenv("AWS_ACCESS_KEY_ID", "AKIAEXAMPLE")
     clean_env.setenv("AWS_SECRET_ACCESS_KEY", "secret")
-    backend = llm.make_llm(Notes(aws_region="us-west-2"))        # bedrock is the default provider
-    assert isinstance(backend, llm.BedrockLLM)
+    backend = llm.Claude(Notes(aws_region="us-west-2"))          # bedrock is the default provider
+    assert backend.prefix == "anthropic."
     seen = mock(backend)
     assert ask(backend, "anthropic.claude-haiku-5-5") == "- a note"
     assert seen["url"] == "https://bedrock-mantle.us-west-2.api.aws/anthropic/v1/messages"
@@ -65,22 +65,23 @@ def test_bedrock_signs_with_aws_credentials(clean_env):
 def test_bedrock_bearer_token_and_region_from_env(clean_env):
     clean_env.setenv("AWS_REGION", "us-east-1")
     clean_env.setenv("AWS_BEARER_TOKEN_BEDROCK", "tok-123")
-    backend = llm.BedrockLLM(Notes())
+    backend = llm.Claude(Notes())
     seen = mock(backend)
     ask(backend, "claude-sonnet-5-5")                            # Claude API name is accepted
     assert seen["url"].startswith("https://bedrock-mantle.us-east-1.api.aws/")
     assert seen["headers"]["authorization"] == "Bearer tok-123"
     assert seen["body"]["model"] == "anthropic.claude-sonnet-5-5"
-    assert llm.bedrock_status(Notes()) == (True, "us-east-1, bearer token from AWS_BEARER_TOKEN_BEDROCK")
+    assert llm.check(Notes()) == (True, "Bedrock us-east-1, bearer token from AWS_BEARER_TOKEN_BEDROCK")
 
 
 def test_bedrock_reports_missing_region_and_credentials(clean_env):
     with pytest.raises(llm.LLMError, match="region"):
-        llm.BedrockLLM(Notes())
-    good, detail = llm.bedrock_status(Notes())
+        llm.Claude(Notes())
+    good, detail = llm.check(Notes())
     assert not good and "region" in detail
-    good, detail = llm.bedrock_status(Notes(aws_region="us-west-2"))
+    good, detail = llm.check(Notes(aws_region="us-west-2"))
     assert not good and "credentials" in detail
+    assert llm.check(Notes(provider="anthropic")) == (False, "Claude API, ANTHROPIC_API_KEY not set")
 
 
 def test_bedrock_region_from_aws_profile(clean_env, tmp_path):
@@ -88,27 +89,32 @@ def test_bedrock_region_from_aws_profile(clean_env, tmp_path):
     (tmp_path / "credentials").write_text("[work]\naws_access_key_id = AKIAWORK\naws_secret_access_key = s\n")
     cfg = Notes(aws_profile="work")
     assert llm.bedrock_region(cfg) == "eu-west-1"
-    backend = llm.BedrockLLM(cfg)
+    backend = llm.Claude(cfg)
     seen = mock(backend)
     ask(backend, "anthropic.claude-haiku-5-5")
     assert seen["url"].startswith("https://bedrock-mantle.eu-west-1.api.aws/")
     assert "Credential=AKIAWORK/" in seen["headers"]["authorization"]
-    assert llm.bedrock_status(cfg)[0]
+    assert llm.check(cfg)[0]
 
 
 def test_truncated_reply_is_an_error(clean_env):
     clean_env.setenv("AWS_BEARER_TOKEN_BEDROCK", "tok")
-    backend = llm.BedrockLLM(Notes(aws_region="us-west-2"))
+    backend = llm.Claude(Notes(aws_region="us-west-2"))
     mock(backend, stop_reason="max_tokens")
     with pytest.raises(llm.LLMError, match="max_tokens"):
         ask(backend, "anthropic.claude-haiku-5-5")
 
 
-def test_anthropic_provider_still_works(clean_env):
+def test_unknown_provider(clean_env):
+    with pytest.raises(llm.LLMError, match="unknown notes provider"):
+        llm.Claude(Notes(provider="openai"))
+
+
+def test_anthropic_provider(clean_env):
     with pytest.raises(llm.LLMError, match="ANTHROPIC_API_KEY"):
-        llm.make_llm(Notes(provider="anthropic"))
+        llm.Claude(Notes(provider="anthropic"))
     clean_env.setenv("ANTHROPIC_API_KEY", "sk-test")
-    backend = llm.make_llm(Notes(provider="anthropic"))
+    backend = llm.Claude(Notes(provider="anthropic"))
     seen = mock(backend)
     ask(backend, "anthropic.claude-haiku-5-5")                   # Bedrock-style name is accepted
     assert seen["url"] == "https://api.anthropic.com/v1/messages"

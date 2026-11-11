@@ -1,7 +1,7 @@
 ---
 name: action-items
 description: Tracks commitments made during the meeting - who agreed to do what, and by when.
-meetscribe:
+minutaur:
   title: Action items
   order: 20
 ---

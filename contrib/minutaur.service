@@ -1,0 +1,15 @@
+[Unit]
+Description=minutaur: record, transcribe and take notes on browser meetings
+After=pipewire-pulse.service pulseaudio.service
+
+[Service]
+ExecStart=%h/.local/bin/minutaur watch
+# AWS_REGION, AWS_PROFILE, API keys: one KEY=VALUE per line.
+EnvironmentFile=-%h/.config/minutaur/env
+Restart=on-failure
+RestartSec=10
+# Stopping finishes the transcript and writes the final notes; give it time.
+TimeoutStopSec=300
+
+[Install]
+WantedBy=default.target

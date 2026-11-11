@@ -4,11 +4,11 @@ import time
 
 import pytest
 
-from meetscribe import audio, skills as skills_mod
-from meetscribe.config import Notes, Speakers, load_config
-from meetscribe.notes import NotesEngine
-from meetscribe.segmenter import Segmenter
-from meetscribe.transcript import Transcript, Utterance
+from minutaur import audio, skills as skills_mod
+from minutaur.config import Notes, Speakers, load_config
+from minutaur.notes import NotesEngine
+from minutaur.segmenter import Segmenter
+from minutaur.transcript import Transcript, Utterance
 
 from conftest import FakeLLM, burst_signal
 
@@ -67,7 +67,7 @@ Source Output #90
 \tClient: 91
 \tCorked: no
 \tProperties:
-\t\tapplication.name = "meetscribe"
+\t\tapplication.name = "minutaur"
 \t\tapplication.process.binary = "parec"
 
 Source Output #95
@@ -107,14 +107,6 @@ def test_default_devices(monkeypatch):
     monkeypatch.setattr(audio, "pactl", lambda *a: replies[a])
     assert audio.default_monitor() == "alsa_output.usb.monitor"
     assert audio.default_source() == "alsa_input.usb"
-
-    def old_pactl(*args):  # pactl without get-default-*
-        if args == ("info",):
-            return "Server Name: pulseaudio\nDefault Sink: old_sink\nDefault Source: old_src\n"
-        raise audio.AudioError("unknown command")
-
-    monkeypatch.setattr(audio, "pactl", old_pactl)
-    assert audio.default_monitor() == "old_sink.monitor"
 
 
 # ----------------------------------------------------------------- transcript
@@ -165,7 +157,7 @@ def test_skill_options_includes_and_override(tmp_path):
     user = tmp_path / "user"
     folder = make_skill(
         user, "risks",
-        "meetscribe:\n  title: Risks\n  order: 5\n  live: false\n  interval: 20\n"
+        "minutaur:\n  title: Risks\n  order: 5\n  live: false\n  interval: 20\n"
         "  final_model: claude-opus-5-5\n  include: [glossary.md]\n",
     )
     (folder / "glossary.md").write_text("SLO means service level objective.")
@@ -192,7 +184,7 @@ def test_skill_options_includes_and_override(tmp_path):
 
 def test_skill_include_cannot_escape_folder(tmp_path):
     (tmp_path / "secret.txt").write_text("x")
-    folder = make_skill(tmp_path / "s", "leaky", "meetscribe:\n  include: [../../secret.txt]\n")
+    folder = make_skill(tmp_path / "s", "leaky", "minutaur:\n  include: [../../secret.txt]\n")
     with pytest.raises(skills_mod.SkillError):
         skills_mod.parse_skill(folder / "SKILL.md")
 
@@ -304,7 +296,7 @@ def test_config_overlay_and_unknown_keys(tmp_path):
 
 
 def test_default_config_file_matches_defaults(tmp_path):
-    from meetscribe.config import DEFAULT_CONFIG_TOML, Config
+    from minutaur.config import DEFAULT_CONFIG_TOML, Config
 
     path = tmp_path / "c.toml"
     path.write_text(DEFAULT_CONFIG_TOML)

@@ -12,16 +12,16 @@ from pathlib import Path
 from typing import Callable
 
 from .config import Notes, Speakers
-from .llm import LLM
+from .llm import Claude
 from .skills import Skill
 from .transcript import Transcript, atomic_write, render
 
-log = logging.getLogger("meetscribe.notes")
+log = logging.getLogger("minutaur.notes")
 
 NO_CHANGE = "NO_CHANGE"
 
 SYSTEM_PROMPT = """\
-You are the note-taking engine inside meetscribe, a tool that transcribes the user's meetings while they happen. You maintain one markdown notes document for one note-taking skill. You are given the notes as they stand plus transcript lines, and you return the updated notes.
+You are the note-taking engine inside minutaur, a tool that transcribes the user's meetings while they happen. You maintain one markdown notes document for one note-taking skill. You are given the notes as they stand plus transcript lines, and you return the updated notes.
 
 About the transcript:
 - It is automatic speech recognition output, so expect misheard words, missing punctuation and mangled names. Read through the errors for the intended meaning, and do not copy obvious mis-transcriptions into the notes.
@@ -82,7 +82,7 @@ class NotesEngine:
         self,
         transcript: Transcript,
         skills: list[Skill],
-        llm: LLM,
+        llm: Claude,
         cfg: Notes,
         session_dir: Path,
         *,

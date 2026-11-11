@@ -1,7 +1,7 @@
 ---
 name: meeting-notes
 description: Running summary of the meeting - topics discussed with their key points, decisions made, and questions left open.
-meetscribe:
+minutaur:
   title: Summary
   order: 10
 ---

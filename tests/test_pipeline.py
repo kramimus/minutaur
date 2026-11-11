@@ -15,11 +15,11 @@ import wave
 
 import pytest
 
-from meetscribe import skills as skills_mod
-from meetscribe.audio import RATE
-from meetscribe.config import Notes
-from meetscribe.session import Session
-from meetscribe.watch import watch
+from minutaur import skills as skills_mod
+from minutaur.audio import RATE
+from minutaur.config import Notes
+from minutaur.session import Session
+from minutaur.watch import watch
 
 from conftest import FakeLLM, FakeTranscriber, burst_signal, write_wav
 
@@ -78,7 +78,7 @@ def test_file_to_transcript_and_notes(cfg, tmp_path):
     llm = FakeLLM()
     printed = []
     session = Session(cfg, title="Design review", skills=builtin_skills(),
-                      transcriber=FakeTranscriber(["We should ship on Friday.", "I'll write the doc."]),
+                      transcriber=lambda: FakeTranscriber(["We should ship on Friday.", "I'll write the doc."]),
                       llm=llm, echo=printed.append)
     session.feed_file(src)
     out = session.stop()
@@ -105,7 +105,7 @@ def test_split_stereo_labels_speakers(cfg, tmp_path):
     stereo = np.stack([left, right], axis=1).reshape(-1)
     src = write_wav(tmp_path / "audio.wav", stereo, channels=2)
     cfg.speakers.me = "Mark"
-    session = Session(cfg, skills=[], transcriber=FakeTranscriber(["mine", "theirs"]), echo=lambda _l: None)
+    session = Session(cfg, skills=[], transcriber=lambda: FakeTranscriber(["mine", "theirs"]), echo=lambda _l: None)
     session.feed_file(src, split_stereo=True)
     out = session.stop()
     assert [(u.speaker, u.text) for u in session.transcript.snapshot()] == [("Mark", "mine"), ("Others", "theirs")]
